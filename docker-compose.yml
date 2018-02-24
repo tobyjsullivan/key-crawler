@@ -1,0 +1,12 @@
+version: "3"
+services:
+  enum:
+    build:
+      context: ./enum
+      dockerfile: ./Dockerfile
+  queuer:
+    build:
+      context: .
+      dockerfile: ./queuer/Dockerfile
+    ports:
+      - "3000:3000"
