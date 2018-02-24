@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	keys := make(chan *keyPair, 20)
+	keys := make(chan *keyPair, 2000)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/pairs", pairsPostHandler(keys)).Methods(http.MethodPost)
@@ -41,8 +41,10 @@ func pairsPostHandler(keys chan *keyPair) func(http.ResponseWriter, *http.Reques
 }
 
 func queueSubmitter(keys chan *keyPair) {
+	var count int
 	for pair := range keys {
-		println("address:", pair.Address, "privateKey:", pair.PrivateKey)
+		count++
+		println("address:", pair.Address, "privateKey:", pair.PrivateKey, "received:", count)
 
 		// TODO submit to a queue
 	}

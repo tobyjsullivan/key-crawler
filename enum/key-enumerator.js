@@ -8,21 +8,35 @@ function enumerateKeys() {
 
     var i = 0;
     while (i++ < 1000) {
-        var keyPair = new bitcoin.ECPair(curPriv);
-        curPriv = curPriv.add(BigInteger.ONE);
-        // var curAddress = keyPair.getAddress();
+        var batch = generateBatch(curPriv);
+        curPriv.add(100);
 
-        console.log(`address=${keyPair.getAddress()}&private-key=${keyPair.toWIF()}`);
-        var res = request('POST', 'http://localhost:3000/pairs', {
+        var res = request('POST', 'http://queuer:3000/pairs', {
             json: {
-                pairs: [{
-                    address: keyPair.getAddress(),
-                    'private-key': keyPair.toWIF()
-                }]
+                pairs: batch
             }
         });
         console.log('Status:', res.statusCode);
     }
+}
+
+function generateBatch(start) {
+    var curPriv = start;
+
+    var batch = [];
+    var i = 0;
+    while (i++ < 100) {
+        var keyPair = new bitcoin.ECPair(curPriv);
+        curPriv = curPriv.add(BigInteger.ONE);
+        // var curAddress = keyPair.getAddress();
+
+        batch.push({
+            address: keyPair.getAddress(),
+            'private-key': keyPair.toWIF()
+        });
+    }
+
+    return batch;
 }
 
 enumerateKeys();
