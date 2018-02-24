@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/urfave/negroni"
+	"encoding/json"
 )
 
 func main() {
@@ -26,31 +27,32 @@ func pairsPostHandler(keys chan *keyPair) func(http.ResponseWriter, *http.Reques
 	return func(w http.ResponseWriter, r *http.Request) {
 		println("Request received.")
 
-		address := r.FormValue("address")
-		privateKey := r.FormValue("private-key")
-
-		if address == "" || privateKey == "" {
-			http.Error(w, "must provide address and private-key", http.StatusBadRequest)
+		var reqBody pairsReqFmt
+		err := json.NewDecoder(r.Body).Decode(&reqBody)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-
-		keys <- &keyPair{
-			address: address,
-			privateKey: privateKey,
+		for _, pair := range reqBody.Pairs {
+			keys <- pair
 		}
 	}
 }
 
 func queueSubmitter(keys chan *keyPair) {
 	for pair := range keys {
-		println("address:", pair.address, "privateKey:", pair.privateKey)
+		println("address:", pair.Address, "privateKey:", pair.PrivateKey)
 
 		// TODO submit to a queue
 	}
 }
 
 type keyPair struct {
-	address string
-	privateKey string
+	Address string `json:"address"`
+	PrivateKey string `json:"private-key"`
+}
+
+type pairsReqFmt struct {
+	Pairs []*keyPair `json:"pairs"`
 }

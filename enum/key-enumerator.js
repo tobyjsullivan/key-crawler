@@ -14,10 +14,12 @@ function enumerateKeys() {
 
         console.log(`address=${keyPair.getAddress()}&private-key=${keyPair.toWIF()}`);
         var res = request('POST', 'http://localhost:3000/pairs', {
-            headers: {
-                'content-type': 'application/x-www-form-urlencoded'
-            },
-            body: `address=${keyPair.getAddress()}&private-key=${keyPair.toWIF()}`
+            json: {
+                pairs: [{
+                    address: keyPair.getAddress(),
+                    'private-key': keyPair.toWIF()
+                }]
+            }
         });
         console.log('Status:', res.statusCode);
     }
