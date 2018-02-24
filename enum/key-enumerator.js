@@ -1,17 +1,26 @@
 var bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
-
+var request = require('sync-request');
 
 function enumerateKeys() {
-	var curPriv = BigInteger.ONE;
+    console.log("Entered enumerateKeys");
+    var curPriv = BigInteger.ONE;
 
-	while (true) {
-		var keyPair = new bitcoin.ECPair(curPriv);
-		curPriv = curPriv.add(BigInteger.ONE);
-		var curAddress = keyPair.getAddress();
+    var i = 0;
+    while (i++ < 1000) {
+        var keyPair = new bitcoin.ECPair(curPriv);
+        curPriv = curPriv.add(BigInteger.ONE);
+        // var curAddress = keyPair.getAddress();
 
-		console.log(keyPair.getAddress()+","+keyPair.toWIF())
-	}
+        console.log(`address=${keyPair.getAddress()}&private-key=${keyPair.toWIF()}`);
+        var res = request('POST', 'http://localhost:3000/pairs', {
+            headers: {
+                'content-type': 'application/x-www-form-urlencoded'
+            },
+            body: `address=${keyPair.getAddress()}&private-key=${keyPair.toWIF()}`
+        });
+        console.log('Status:', res.statusCode);
+    }
 }
 
 enumerateKeys();

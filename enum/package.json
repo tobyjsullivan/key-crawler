@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "bigi": "^1.4.2",
-    "bitcoinjs-lib": "^3.3.2"
+    "bitcoinjs-lib": "^3.3.2",
+    "sync-request": "^5.0.0"
   }
 }

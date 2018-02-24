@@ -24,6 +24,7 @@ func main() {
 
 func pairsPostHandler(keys chan *keyPair) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		println("Request received.")
 
 		address := r.FormValue("address")
 		privateKey := r.FormValue("private-key")

@@ -4,6 +4,8 @@ services:
     build:
       context: ./enum
       dockerfile: ./Dockerfile
+    depends_on:
+      - queuer
   queuer:
     build:
       context: .
