@@ -5,25 +5,47 @@ import (
 	"net/http"
 	"github.com/urfave/negroni"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/tobyjsullivan/key-crawler/keys"
 )
 
+var received int
+var delivered int
+
 func main() {
-	keys := make(chan *keyPair, 2000)
+	keyPairs := make(chan *keys.KeyPair, 2000)
+	batches := make(chan []*keys.KeyPair, 10)
+
+	client := sqs.New(session.Must(session.NewSession(
+		aws.NewConfig().WithCredentials(credentials.NewEnvCredentials()).WithRegion("us-east-1"))))
 
 	r := mux.NewRouter()
-	r.HandleFunc("/pairs", pairsPostHandler(keys)).Methods(http.MethodPost)
+	r.HandleFunc("/pairs", pairsPostHandler(keyPairs)).Methods(http.MethodPost)
 
 	n := negroni.New()
 	n.UseHandler(r)
 
 	port := "3000"
 
-	go queueSubmitter(keys)
+	go queueSubmitter(keyPairs, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
+	go sendBatches(client, batches)
 
 	n.Run(":"+port)
 }
 
-func pairsPostHandler(keys chan *keyPair) func(http.ResponseWriter, *http.Request) {
+func pairsPostHandler(keys chan *keys.KeyPair) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		println("Request received.")
 
@@ -40,21 +62,56 @@ func pairsPostHandler(keys chan *keyPair) func(http.ResponseWriter, *http.Reques
 	}
 }
 
-func queueSubmitter(keys chan *keyPair) {
-	var count int
-	for pair := range keys {
-		count++
-		println("address:", pair.Address, "privateKey:", pair.PrivateKey, "received:", count)
+func queueSubmitter(keyPairs chan *keys.KeyPair, batches chan []*keys.KeyPair) {
+	batchSize := 10
+	batch := make([]*keys.KeyPair, 0, batchSize)
 
-		// TODO submit to a queue
+	for pair := range keyPairs {
+		received++
+		if received% 100 == 0 {
+			println("address:", pair.Address, "privateKey:", pair.PrivateKey, "received:", received)
+		}
+		batch = append(batch, pair)
+
+		if len(batch) == batchSize {
+			tmp := make([]*keys.KeyPair, batchSize)
+			copy(tmp, batch)
+			batches<- tmp
+			batch = batch[:0]
+		}
 	}
 }
 
-type keyPair struct {
-	Address string `json:"address"`
-	PrivateKey string `json:"private-key"`
+func sendBatches(client *sqs.SQS, batches chan []*keys.KeyPair) {
+	for batch := range batches {
+		entries := make([]*sqs.SendMessageBatchRequestEntry, 0, len(batch))
+		for _, entry := range batch {
+			msg, err := json.Marshal(entry)
+			if err != nil {
+				println("error:", err.Error())
+				continue
+			}
+
+			entries = append(entries, &sqs.SendMessageBatchRequestEntry{
+				Id:          aws.String(entry.Address),
+				MessageBody: aws.String(string(msg)),
+			})
+		}
+
+		_, err := client.SendMessageBatch(&sqs.SendMessageBatchInput{
+			QueueUrl: aws.String("https://sqs.us-east-1.amazonaws.com/110303772622/bitcoin-keys"),
+			Entries:  entries,
+		})
+		if err != nil {
+			println("error sending batch:", err.Error())
+		}
+		delivered += len(batch)
+		if delivered%100 == 0 {
+			println("delivered:", delivered)
+		}
+	}
 }
 
 type pairsReqFmt struct {
-	Pairs []*keyPair `json:"pairs"`
+	Pairs []*keys.KeyPair `json:"pairs"`
 }
