@@ -1,3 +1,5 @@
+VERSION?=latest
+
 all: recorder queuer
 
 recorder: build/recorder
@@ -19,15 +21,21 @@ build/queuer:
 aws-signin:
 	`aws ecr get-login --no-include-email --region us-east-1`
 
-push-recorder: aws-signin
-	docker tag key-crawler-recorder:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:latest
-	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:latest
+push-recorder: recorder aws-signin
+	docker tag key-crawler-recorder:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:$(VERSION)
+	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:$(VERSION)
 
-push-queuer: aws-signin 
-	docker tag key-crawler-queuer:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:latest
-	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:latest
+push-queuer: queuer aws-signin 
+	docker tag key-crawler-queuer:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:$(VERSION)
+	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:$(VERSION)
 
 push-all: push-recorder push-queuer
+
+release: recorder queuer git-tag-version push-all
+
+git-tag-version:
+	git tag $(VERSION)
+	git push --tags
 
 clean:
 	rm -f ./build/*
