@@ -5,7 +5,7 @@ recorder: build/recorder
 
 build/recorder:
 	docker build -t recorder-build -f ./recorder/Dockerfile.build .
-	docker create --rm --name recorder-build recorder-build
+	docker create --name recorder-build recorder-build
 	docker cp recorder-build:/go/bin/recorder ./build/
 
 queuer: build/queuer
@@ -13,17 +13,17 @@ queuer: build/queuer
 
 build/queuer:
 	docker build -t queuer-build -f ./queuer/Dockerfile.build .
-	docker create --rm --name queuer-build queuer-build
+	docker create --name queuer-build queuer-build
 	docker cp queuer-build:/go/bin/queuer ./build/
 
 aws-signin:
 	`aws ecr get-login --no-include-email --region us-east-1`
 
-push-recorder: recorder aws-signin
+push-recorder: aws-signin
 	docker tag key-crawler-recorder:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:latest
 	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:latest
 
-push-queuer: queuer aws-signin 
+push-queuer: aws-signin 
 	docker tag key-crawler-queuer:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:latest
 	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:latest
 
