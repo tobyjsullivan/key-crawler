@@ -1,6 +1,4 @@
-FROM golang:1
+FROM debian:stretch
 
-ADD . /go/src/github.com/tobyjsullivan/key-crawler/
-RUN go install github.com/tobyjsullivan/key-crawler/queuer
-
-CMD /go/bin/queuer
+ADD ./build/queuer /var/opt/queuer
+CMD /var/opt/queuer

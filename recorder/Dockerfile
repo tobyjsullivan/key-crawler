@@ -1,6 +1,4 @@
-FROM golang:1
+FROM debian:stretch
 
-ADD . /go/src/github.com/tobyjsullivan/key-crawler/
-RUN go install github.com/tobyjsullivan/key-crawler/recorder
-
-CMD /go/bin/recorder
+ADD ./build/recorder /var/opt/recorder
+CMD /var/opt/recorder
