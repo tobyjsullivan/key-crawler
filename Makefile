@@ -38,7 +38,7 @@ aws/push-enum: images/enum aws/signin
 
 aws/push-all: aws/push-recorder aws/push-queuer aws/push-enum
 
-release: images/clean images/recorder images/queuer git/tag-version aws/push-all
+release: clean images/recorder images/queuer git/tag-version aws/push-all
 
 git/tag-version:
 	git tag $(VERSION)
