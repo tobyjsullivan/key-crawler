@@ -3,6 +3,9 @@ var BigInteger = require('bigi');
 var request = require('sync-request');
 
 const BATCH_SIZE = 1000;
+const QUEUER_HOSTNAME = process.env.QUEUER_HOSTNAME;
+const QUEUER_PORT = process.env.QUEUER_PORT;
+const PAIRS_ENDPOINT = `http://${QUEUER_HOSTNAME}:${QUEUER_PORT}/pairs`
 
 var count = 0;
 
@@ -15,7 +18,7 @@ function enumerateKeys() {
         var batch = generateBatch(curPriv);
         curPriv = curPriv.add(new BigInteger(''+BATCH_SIZE));
 
-        var res = request('POST', 'http://queuer:3000/pairs', {
+        var res = request('POST', PAIRS_ENDPOINT, {
             json: {
                 pairs: batch
             }

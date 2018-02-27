@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/tobyjsullivan/key-crawler/keys"
+	"os"
 )
 
 var received int
@@ -28,7 +29,10 @@ func main() {
 	n := negroni.New()
 	n.UseHandler(r)
 
-	port := "3000"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
 
 	go queueSubmitter(keyPairs, batches)
 	go sendBatches(client, batches)
