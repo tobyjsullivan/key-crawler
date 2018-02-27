@@ -2,19 +2,23 @@ var bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var request = require('sync-request');
 
+var startingValue = process.env.STARTING_VALUE;
 const BATCH_SIZE = 1000;
 const QUEUER_HOSTNAME = process.env.QUEUER_HOSTNAME;
 const QUEUER_PORT = process.env.QUEUER_PORT;
-const PAIRS_ENDPOINT = `http://${QUEUER_HOSTNAME}:${QUEUER_PORT}/pairs`
+const PAIRS_ENDPOINT = `http://${QUEUER_HOSTNAME}:${QUEUER_PORT}/pairs`;
+
+if (!startingValue) {
+    startingValue = BigInteger.ONE;
+}
 
 var count = 0;
 
 function enumerateKeys() {
     console.log("Entered enumerateKeys");
-    var curPriv = BigInteger.ONE;
+    var curPriv = startingValue;
 
-    var i = 0;
-    while (i++ < 100) {
+    while (true) {
         var batch = generateBatch(curPriv);
         curPriv = curPriv.add(new BigInteger(''+BATCH_SIZE));
 
