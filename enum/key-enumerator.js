@@ -9,14 +9,14 @@ const QUEUER_PORT = process.env.QUEUER_PORT;
 const PAIRS_ENDPOINT = `http://${QUEUER_HOSTNAME}:${QUEUER_PORT}/pairs`;
 
 if (!startingValue) {
-    startingValue = BigInteger.ONE;
+    startingValue = '1';
 }
 
 var count = 0;
 
 function enumerateKeys() {
     console.log("Entered enumerateKeys");
-    var curPriv = startingValue;
+    var curPriv = new BigInteger(startingValue);
 
     while (true) {
         var batch = generateBatch(curPriv);
@@ -47,7 +47,7 @@ function generateBatch(start) {
         });
 
         if (count % 100 === 0) {
-            console.log("count:", count);
+            console.log("count:", count, 'value:', curPriv);
         }
     }
 

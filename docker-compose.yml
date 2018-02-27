@@ -7,6 +7,7 @@ services:
     environment:
       - QUEUER_HOSTNAME=queuer
       - QUEUER_PORT=3000
+      - STARTING_VALUE=100000
     depends_on:
       - queuer
   queuer:
