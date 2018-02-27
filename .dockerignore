@@ -1,3 +1,6 @@
 /docker-compose.yml
 /pgdata
 /sql
+/.git
+/.idea
+/Makefile

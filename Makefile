@@ -1,8 +1,8 @@
 VERSION?=latest
 
-all: recorder queuer
+all: images/recorder images/queuer images/enum
 
-recorder: build/recorder
+images/recorder: build/recorder
 	docker build -t key-crawler-recorder -f ./recorder/Dockerfile .
 
 build/recorder:
@@ -10,7 +10,7 @@ build/recorder:
 	docker create --name recorder-build recorder-build
 	docker cp recorder-build:/go/bin/recorder ./build/
 
-queuer: build/queuer
+images/queuer: build/queuer
 	docker build -t key-crawler-queuer -f ./queuer/Dockerfile .
 
 build/queuer:
@@ -18,22 +18,29 @@ build/queuer:
 	docker create --name queuer-build queuer-build
 	docker cp queuer-build:/go/bin/queuer ./build/
 
-aws-signin:
+images/enum:
+	docker build -t key-crawler-enum -f enum/Dockerfile ./enum
+
+aws/signin:
 	`aws ecr get-login --no-include-email --region us-east-1`
 
-push-recorder: recorder aws-signin
+aws/push-recorder: images/recorder aws/signin
 	docker tag key-crawler-recorder:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:$(VERSION)
 	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-recorder:$(VERSION)
 
-push-queuer: queuer aws-signin 
+aws/push-queuer: images/queuer aws/signin
 	docker tag key-crawler-queuer:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:$(VERSION)
 	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-queuer:$(VERSION)
 
-push-all: push-recorder push-queuer
+aws/push-enum: images/enum aws/signin
+	docker tag key-crawler-enum:latest 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-enum:$(VERSION)
+	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-enum:$(VERSION)
 
-release: recorder queuer git-tag-version push-all
+aws/push-all: aws/push-recorder aws/push-queuer aws/push-enum
 
-git-tag-version:
+release: images/clean images/recorder images/queuer git/tag-version aws/push-all
+
+git/tag-version:
 	git tag $(VERSION)
 	git push --tags
 
