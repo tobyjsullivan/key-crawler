@@ -5,6 +5,11 @@ all: images/recorder images/queuer images/enum
 images/recorder: build/recorder
 	docker build -t key-crawler-recorder -f ./recorder/Dockerfile .
 
+build/enum-batch-gen:
+	docker build -t enum-batch-gen-build -f ./enum-batch-gen/Dockerfile.build .
+	docker create --name enum-batch-gen-build enum-batch-gen-build
+	docker cp enum-batch-gen-build:/go/bin/enum-batch-gen ./build/
+
 build/recorder:
 	docker build -t recorder-build -f ./recorder/Dockerfile.build .
 	docker create --name recorder-build recorder-build
@@ -46,4 +51,4 @@ git/tag-version:
 
 clean:
 	rm -f ./build/*
-	docker rm queuer-build recorder-build; true
+	docker rm queuer-build recorder-build enum-batch-gen-build; true
