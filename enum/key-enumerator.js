@@ -1,53 +1,91 @@
 var bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var request = require('sync-request');
+var AWS = require('aws-sdk');
 
-var startingValue = process.env.STARTING_VALUE;
-const BATCH_SIZE = 1000;
+AWS.config.update({region: 'us-east-1'});
+
+const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL;
 const QUEUER_HOSTNAME = process.env.QUEUER_HOSTNAME;
 const QUEUER_PORT = process.env.QUEUER_PORT;
 const PAIRS_ENDPOINT = `http://${QUEUER_HOSTNAME}:${QUEUER_PORT}/pairs`;
 
-if (!startingValue) {
-    startingValue = '1';
-}
-
-var count = 0;
-
 function enumerateKeys() {
     console.log("Entered enumerateKeys");
-    var curPriv = new BigInteger(startingValue);
 
-    while (true) {
-        var batch = generateBatch(curPriv);
-        curPriv = curPriv.add(new BigInteger(''+BATCH_SIZE));
-
-        var res = request('POST', PAIRS_ENDPOINT, {
-            json: {
-                pairs: batch
-            }
-        });
-        console.log('Status:', res.statusCode);
+    if (!SQS_QUEUE_URL) {
+        throw Error("Must define SQS_QUEUE_URL");
     }
+
+    const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+
+    console.debug('[enumerateKeys] SQS client initialized.');
+
+    setImmediate(processNextMessage, sqs);
 }
 
-function generateBatch(start) {
-    var curPriv = start;
+function processNextMessage(sqs) {
+    console.debug('[enumerateKeys] Requesting messages from SQS...');
+
+    sqs.receiveMessage({
+        QueueUrl: SQS_QUEUE_URL
+    }, function(err, data) {
+        console.debug('[enumerateKeys] receiveMessage callback entered.');
+
+        if (err !== null) {
+            console.error("[enumerateKeys] Error receiving messages:", err);
+            return;
+        }
+
+        for (var msg of data.Messages) {
+            const batchSpec = JSON.parse(msg.Body);
+
+            var batch = generateBatch(batchSpec.start, batchSpec.size);
+            var res = request('POST', PAIRS_ENDPOINT, {
+                json: {
+                    pairs: batch
+                }
+            });
+            console.log('Status:', res.statusCode);
+
+            if (res.statusCode !== 200) {
+                console.error("[enumerateKeys] Error sending pairs:", res.statusMessage);
+                continue;
+            }
+
+            sqs.deleteMessage({
+                QueueUrl: SQS_QUEUE_URL,
+                ReceiptHandle: msg.ReceiptHandle
+            }, function(err) {
+                if (err) {
+                    console.error('[enumerateKeys] Error deleting message:', err);
+                }
+            });
+        }
+
+        setTimeout(processNextMessage, 1000, sqs);
+    });
+
+    console.debug('[enumerateKeys] Requested messages from SQS.');
+}
+
+function generateBatch(start, size) {
+    var curPriv = new BigInteger('' + start);
 
     var batch = [];
     var i = 0;
-    while (i++ < BATCH_SIZE) {
+    while (i++ < size) {
         var keyPair = new bitcoin.ECPair(curPriv);
         curPriv = curPriv.add(BigInteger.ONE);
 
-        count++;
+        i++;
         batch.push({
             address: keyPair.getAddress(),
             'private-key': keyPair.toWIF()
         });
 
-        if (count % 100 === 0) {
-            console.log("count:", count, 'value:', curPriv);
+        if (i % 100 === 0) {
+            console.log("count:", i, 'value:', curPriv);
         }
     }
 

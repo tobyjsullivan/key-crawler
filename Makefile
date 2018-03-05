@@ -2,13 +2,16 @@ VERSION?=latest
 
 all: images/recorder images/queuer images/enum
 
-images/recorder: build/recorder
-	docker build -t key-crawler-recorder -f ./recorder/Dockerfile .
+images/enum-batch-gen: build/enum-batch-gen
+	docker build -t enum-batch-gen -f ./enum-batch-gen/Dockerfile .
 
 build/enum-batch-gen:
 	docker build -t enum-batch-gen-build -f ./enum-batch-gen/Dockerfile.build .
 	docker create --name enum-batch-gen-build enum-batch-gen-build
 	docker cp enum-batch-gen-build:/go/bin/enum-batch-gen ./build/
+
+images/recorder: build/recorder
+	docker build -t key-crawler-recorder -f ./recorder/Dockerfile .
 
 build/recorder:
 	docker build -t recorder-build -f ./recorder/Dockerfile.build .
@@ -42,6 +45,12 @@ aws/push-enum: images/enum aws/signin
 	docker push 110303772622.dkr.ecr.us-east-1.amazonaws.com/key-crawler-enum:$(VERSION)
 
 aws/push-all: aws/push-recorder aws/push-queuer aws/push-enum
+
+compose/run/enum: compose/build/enum
+	docker-compose run enum
+
+compose/build/enum:
+	docker-compose build enum
 
 release: clean images/recorder images/queuer git/tag-version aws/push-all
 
