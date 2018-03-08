@@ -25,15 +25,15 @@ function enumerateKeys() {
 }
 
 function processNextMessage(sqs) {
-    console.debug('[enumerateKeys] Requesting messages from SQS...');
+    console.debug('[processNextMessage] Requesting messages from SQS...');
 
     sqs.receiveMessage({
         QueueUrl: SQS_QUEUE_URL
     }, function(err, data) {
-        console.debug('[enumerateKeys] receiveMessage callback entered.');
+        console.debug('[processNextMessage] receiveMessage callback entered.');
 
         if (err !== null) {
-            console.error("[enumerateKeys] Error receiving messages:", err);
+            console.error("[processNextMessage] Error receiving messages:", err);
             return;
         }
 
@@ -49,7 +49,7 @@ function processNextMessage(sqs) {
             console.log('Status:', res.statusCode);
 
             if (res.statusCode !== 200) {
-                console.error("[enumerateKeys] Error sending pairs:", res.statusMessage);
+                console.error("[processNextMessage] Error sending pairs:", res.statusMessage);
                 continue;
             }
 
@@ -58,12 +58,14 @@ function processNextMessage(sqs) {
                 ReceiptHandle: msg.ReceiptHandle
             }, function(err) {
                 if (err) {
-                    console.error('[enumerateKeys] Error deleting message:', err);
+                    console.error('[processNextMessage] Error deleting message:', err);
+                } else {
+                    console.debug('[processNextMessage] Message deleted.');
                 }
             });
         }
 
-        setTimeout(processNextMessage, 1000, sqs);
+        setImmediate(processNextMessage, sqs);
     });
 
     console.debug('[enumerateKeys] Requested messages from SQS.');
