@@ -1,0 +1,1 @@
+"sqs_queue_prefix" = "dev-"

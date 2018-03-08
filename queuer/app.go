@@ -13,10 +13,17 @@ import (
 	"os"
 )
 
-var received int
-var delivered int
+var (
+	queueUrl = os.Getenv("KEY_QUEUE_URL")
+	received int
+	delivered int
+)
 
 func main() {
+	if queueUrl == "" {
+		panic("Must set KEY_QUEUE_URL")
+	}
+
 	keyPairs := make(chan *keys.KeyPair, 2000)
 	batches := make(chan []*keys.KeyPair, 10)
 
@@ -103,7 +110,7 @@ func sendBatches(client *sqs.SQS, batches chan []*keys.KeyPair) {
 		}
 
 		_, err := client.SendMessageBatch(&sqs.SendMessageBatchInput{
-			QueueUrl: aws.String("https://sqs.us-east-1.amazonaws.com/110303772622/bitcoin-keys"),
+			QueueUrl: aws.String(queueUrl),
 			Entries:  entries,
 		})
 		if err != nil {

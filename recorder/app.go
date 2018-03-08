@@ -14,11 +14,8 @@ import (
 	"os"
 )
 
-const (
-	queueUrl = "https://sqs.us-east-1.amazonaws.com/110303772622/bitcoin-keys"
-)
-
 var (
+	queueUrl = os.Getenv("KEY_QUEUE_URL")
 	received int
 	recorded int
 	completed int
@@ -30,6 +27,10 @@ type sqsMessage struct {
 }
 
 func main() {
+	if queueUrl == "" {
+		panic("Must set KEY_QUEUE_URL")
+	}
+
 	dbPassword := os.Getenv("PGPASSWORD")
 	println("Using DB password:", dbPassword)
 

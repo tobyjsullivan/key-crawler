@@ -1,3 +1,5 @@
 .idea
 /pgdata
 /build
+terraform.tfstate.backup
+/.terraform

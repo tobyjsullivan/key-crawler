@@ -7,7 +7,7 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
-      - SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/110303772622/key-enumerator-batches
+      - BATCH_QUEUE_URL
       - START=34400000
       - BATCH_SIZE=20000
   enum:
@@ -17,7 +17,7 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
-      - SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/110303772622/key-enumerator-batches
+      - BATCH_QUEUE_URL
       - QUEUER_HOSTNAME=queuer
       - QUEUER_PORT=3000
     depends_on:
@@ -29,19 +29,21 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - KEY_QUEUE_URL
       - PORT=3000
   recorder:
     build:
       context: .
       dockerfile: ./recorder/Dockerfile
     environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - KEY_QUEUE_URL
       - PGHOST=db
       - PGDATABASE=keys
       - PGUSER=pguser
       - PGPASSWORD=mqjwDUBaomAwXQwl
       - PGSSLMODE=disable
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
     depends_on:
       - db
   db:
