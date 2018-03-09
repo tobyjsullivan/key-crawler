@@ -1,9 +1,3 @@
-variable "sqs_queue_prefix" {}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_sqs_queue" "enum_batch" {
   name = "${var.sqs_queue_prefix}enum-batch-queue"
   visibility_timeout_seconds = "1800"
@@ -11,7 +5,7 @@ resource "aws_sqs_queue" "enum_batch" {
 }
 
 resource "aws_sqs_queue" "keys" {
-  name = "${var.sqs_queue_prefix}keys-queue"
+  name = "${var.sqs_queue_prefix}keys"
   visibility_timeout_seconds = "60"
   message_retention_seconds = "1209600"
 }

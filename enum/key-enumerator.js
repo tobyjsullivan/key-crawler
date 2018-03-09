@@ -45,7 +45,11 @@ function processNextMessage(sqs) {
             return;
         }
 
-        for (var msg of data.Messages) {
+        console.debug("[processNextMessage] Received data:", data);
+        console.debug("[processNextMessage] Received data.Messages:", data.Messages);
+
+        for (let i = 0; i < data.Messages.length; i++) {
+            const msg = data.Messages[i];
             const batchSpec = JSON.parse(msg.Body);
 
             const batchSize = 1000;

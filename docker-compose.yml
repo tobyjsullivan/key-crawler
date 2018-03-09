@@ -39,22 +39,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - KEY_QUEUE_URL
-      - PGHOST=db
-      - PGDATABASE=keys
-      - PGUSER=pguser
-      - PGPASSWORD=mqjwDUBaomAwXQwl
-      - PGSSLMODE=disable
-    depends_on:
-      - db
-  db:
-    image: postgres:9.6
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=keys
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_USER=pguser
-      - POSTGRES_PASSWORD=mqjwDUBaomAwXQwl
-    volumes:
-      - "./pgdata:/var/lib/postgresql/data/pgdata"
+      - PGHOST
+      - PGDATABASE
+      - PGUSER
+      - PGPASSWORD

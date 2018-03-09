@@ -19,7 +19,7 @@ const (
 func main() {
 	current := requireEnvInt("START", 64)
 	batchSize := requireEnvInt("BATCH_SIZE", 32)
-	sqsQueueUrl := requireEnvString("SQS_QUEUE_URL")
+	sqsQueueUrl := requireEnvString("BATCH_QUEUE_URL")
 
 	client := sqs.New(session.Must(session.NewSession(
 		aws.NewConfig().WithCredentials(credentials.NewEnvCredentials()).WithRegion("us-east-1"))))
